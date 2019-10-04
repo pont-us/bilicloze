@@ -7,7 +7,7 @@ import wordfreq
 import argparse
 
 def main():
-    make_clozes(100, 10, 5, 80)
+    make_clozes(100, 5, 5, 80)
 
 
 def make_clozes(nwords, max_sentences_per_word,
@@ -32,22 +32,25 @@ def make_clozes(nwords, max_sentences_per_word,
             words = sentence_to_words(sentence_l2)
             for word in words:
                 if word not in word_map:
-                    word_map[word] = []
-                word_map[word].append(sentence_l2)
+                    # We use an OrderedDict as an ordered set, since the
+                    # Python standard library lacks the latter.
+                    word_map[word] = OrderedDict()
+                if sentence_l2 not in word_map[word]:
+                    word_map[word][sentence_l2] = None
 
     top_n_words = wordfreq.top_n_list("fi", nwords)
 
     for word in top_n_words:
         if word in word_map:
-            sentences_l2 = word_map[word][:max_sentences_per_word]
+            sentences_l2 = list(word_map[word])[:max_sentences_per_word]
             for sentence_l2 in sentences_l2:
                 translation_list = \
                     sentence_map[sentence_l2][:max_translations_per_sentence]
-                cloze = clozify(sentence_l2, word, "____")
+                cloze = clozify(sentence_l2, word, "{{c1::%s}}" % word)
                 translations = " / ".join(translation_list)
                 if len(cloze) <= max_characters and \
                    len(translations) <= max_characters:
-                    print(cloze, translations, word)
+                    print("<p>%s</p><p>%s</p>" % (cloze, translations))
 
 
 def clozify(sentence, word, cloze_marker):
