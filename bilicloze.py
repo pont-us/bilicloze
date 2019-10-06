@@ -21,14 +21,18 @@ def main():
     parser.add_argument("-m", "--max-characters", type=int,
                         default=80,
                         help="maximum characters in sentence or translations")
+    parser.add_argument("language", type=str,
+                        choices=sorted(wordfreq.available_languages().keys()),
+                        help="two-letter language code for L2")
     parser.add_argument("sentence_file", type=str,
                         help="file containing sentence data")
     args = parser.parse_args()
-    make_clozes(args.sentence_file, args.words, args.sentences_per_word,
+    make_clozes(args.sentence_file, args.language,
+                args.words, args.sentences_per_word,
                 args.translations_per_sentence, args.max_characters)
 
 
-def make_clozes(sentence_file, nwords, max_sentences_per_word,
+def make_clozes(sentence_file, language, nwords, max_sentences_per_word,
                 max_translations_per_sentence, max_characters):
     sentence_map = OrderedDict()
     word_map = {}
@@ -51,7 +55,7 @@ def make_clozes(sentence_file, nwords, max_sentences_per_word,
                 if sentence_l2 not in word_map[word]:
                     word_map[word][sentence_l2] = None
 
-    top_n_words = wordfreq.top_n_list("fi", nwords)
+    top_n_words = wordfreq.top_n_list(language, nwords)
 
     for word in top_n_words:
         if word in word_map:
