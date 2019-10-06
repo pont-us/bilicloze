@@ -8,7 +8,8 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Create clozes from a bilingual sentence list.")
+        description="Create clozes from a bilingual sentence list.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-w", "--words", type=int,
                         default=100,
                         help="number of words for which to create clozes"),
