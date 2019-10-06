@@ -1,0 +1,90 @@
+bilicloze: generate cloze tests from bilingual sentence lists
+=============================================================
+
+Bilicloze takes an input file containing sentence translations and uses it
+to generate bilingual https://en.wikipedia.org/wiki/Cloze_test[cloze test]
+flashcard data for the most frequent words in a language.
+
+Description
+-----------
+
+Bilicloze is a study aid to help learners who speak one language (L1)
+learn vocabulary in another language (L2).
+
+As input, bilicloze takes a sentence file. This is a plain text file; each
+line of the file contains two fields, separated by a tab character. The
+first field is a sentence in the L1 language; the second field is an
+equivalent (i.e. a translation) of that sentence in L2. The equivalents do
+not need to be one-to-one: a file can contain multiple identical L1
+sentences with different L2 equivalents, and multiple identical L2
+sentences with different L1 equivalents. This is the file format of the
+https://www.manythings.org/anki/[Tab-delimited Bilingual Sentence Pairs]
+on the https://manythings.org[ManyThings.org] website, which in turn are
+generated from data from the https://tatoeba.org/[Tatoeba] project.
+
+Having read the sentence file, bilicloze uses it to generate cloze
+sentences for each of the 100 most frequent words in L2. For each word, it
+finds five L2 sentences containing that word. For each of those L2
+sentences, it creates a cloze test with the word concealed, and adds up to
+five L1 translations to the test as glosses of the L2 sentence's meaning.
+If a word can not be found in the sentence file, it is ignored. The number
+of words, number of L2 sentences, and number of L1 sentences are all
+configurable.
+
+The cloze tests are written to standard output, one per line, in a format
+suitable for direct import into the https://apps.ankiweb.net/[Anki]
+flashcard program. Bilicloze obtains word frequency data from the Python
+package https://pypi.org/project/wordfreq/[wordfreq].
+
+Usage
+-----
+
+General usage syntax:
+
+----
+./bilicloze.py <options> <language> <input-file>
+----
+
+Example usage:
+
+For each of the 200 most frequent words in German, generate eight cloze
+tests with different German sentences, taking German sentences and their
+translations from the file `deu.txt`. For each of those cloze tests,
+include up to four translations. Exclude any cloze tests for which the
+German sentence or the list of translations exceeds 100 characters. Write
+the results to the file `clozes.txt`.
+
+----
+./bilicloze.py --words 200 --sentences-per-word 8 --translations-per-sentence 4 --max-characters 100 deu.txt > clozes.txt
+----
+
+To describe usage and options:
+
+----
+./bilicloze.py -h
+----
+
+Input format sample
+-------------------
+
+Here, ⇥ represents the tab character.
+
+----
+We'll go.⇥Wir werden gehen.
+We will go.⇥Wir werden gehen.
+Du wirst essen.⇥You will eat.
+----
+
+Output format sample
+--------------------
+
+----
+<p>Wir {{c1:werden}} gehen.</p><p>We'll go. / We will go.</p>
+<p>{{c1:Du}} wirst essen.</p><p>You will eat.</p>
+----
+
+License
+-------
+
+bilicloze is Copyright 2019 Pontus Lurcock and released under the
+MIT license. See source code for full license text.
