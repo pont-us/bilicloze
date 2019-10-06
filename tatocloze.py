@@ -7,20 +7,33 @@ import wordfreq
 import argparse
 
 def main():
-    make_clozes(100, 5, 5, 80)
-
-
-def make_clozes(nwords, max_sentences_per_word,
-                max_translations_per_sentence,
-                max_characters):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("sentence_file", type=str)
+    parser = argparse.ArgumentParser(
+        description="Create clozes from a bilingual sentence list.")
+    parser.add_argument("-w", "--words", type=int,
+                        default=100,
+                        help="number of words for which to create clozes"),
+    parser.add_argument("-s", "--sentences-per-word", type=int,
+                        default=5,
+                        help="number of L2 sentences to clozify for each word"),
+    parser.add_argument("-t", "--translations-per-sentence", type=int,
+                        default=5,
+                        help="number of L1 translations for each L2 sentence"),
+    parser.add_argument("-m", "--max-characters", type=int,
+                        default=80,
+                        help="maximum characters in sentence or translations")
+    parser.add_argument("sentence_file", type=str,
+                        help="file containing sentence data")
     args = parser.parse_args()
+    make_clozes(args.sentence_file, args.words, args.sentences_per_word,
+                args.translations_per_sentence, args.max_characters)
 
+
+def make_clozes(sentence_file, nwords, max_sentences_per_word,
+                max_translations_per_sentence, max_characters):
     sentence_map = OrderedDict()
     word_map = {}
     
-    with open(args.sentence_file) as fh:
+    with open(sentence_file) as fh:
         while True:
             line = fh.readline()
             if line == "":
@@ -46,30 +59,30 @@ def make_clozes(nwords, max_sentences_per_word,
             for sentence_l2 in sentences_l2:
                 translation_list = \
                     sentence_map[sentence_l2][:max_translations_per_sentence]
-                cloze = clozify(sentence_l2, word, "{{c1::%s}}" % word)
+                cloze = make_anki_cloze(sentence_l2, word)
                 translations = " / ".join(translation_list)
                 if len(cloze) <= max_characters and \
                    len(translations) <= max_characters:
                     print("<p>%s</p><p>%s</p>" % (cloze, translations))
 
 
-def clozify(sentence, word, cloze_marker):
-    """Make a cloze out of a sentence.
+def make_anki_cloze(sentence, word):
+    """Make an Anki-formatted cloze out of a sentence.
 
-    >>> clozify("I battered the bat.", "bat", "####")
-    'I battered the ####.'
-    >>> clozify("A fat pig is a happy pig.", "pig", "??")
-    'A fat ?? is a happy ??.'
-    >>> clozify("This isn't too hard.", "isn't", "___")
-    'This ___ too hard.'
-    >>> clozify("It wasn't, alas, correct.", "wasn't", "___")
-    'It ___, alas, correct.'
-    >>> clozify("First things first.", "first", "---")
-    '--- things ---.'
+    >>> make_anki_cloze("I battered the bat.", "bat")
+    'I battered the {{c1::bat}}.'
+    >>> make_anki_cloze("A fat pig is a happy pig.", "pig")
+    'A fat {{c1::pig}} is a happy {{c1::pig}}.'
+    >>> make_anki_cloze("This isn't too hard.", "isn't")
+    "This {{c1::isn't}} too hard."
+    >>> make_anki_cloze("It wasn't, alas, correct.", "wasn't")
+    "It {{c1::wasn't}}, alas, correct."
+    >>> make_anki_cloze("First things first.", "first")
+    '{{c1::First}} things {{c1::first}}.'
     """
 
-    return re.subn(r"(^\W*| \W*)" + word + r"(\W* |\W*$)",
-                   r"\1" + cloze_marker + r"\2",
+    return re.subn(r"(^\W*| \W*)(%s)(\W* |\W*$)" % word,
+                   r"\1{{c1::\2}}\3",
                    sentence,
                    flags=re.IGNORECASE)[0]
 
