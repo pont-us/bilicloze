@@ -25,8 +25,11 @@
 from collections import OrderedDict
 from typing import List
 import re
-import wordfreq
+import sys
+import csv
 import argparse
+import wordfreq
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -55,8 +58,10 @@ def main():
                 args.translations_per_sentence, args.max_characters)
 
 
-def make_clozes(sentence_file, language, nwords, max_sentences_per_word,
-                max_translations_per_sentence, max_characters):
+def make_clozes(sentence_file: str, language: str, nwords: int,
+                max_sentences_per_word: int,
+                max_translations_per_sentence: int,
+                max_characters: int) -> None:
     sentence_map = OrderedDict()
     word_map = {}
     
@@ -80,6 +85,8 @@ def make_clozes(sentence_file, language, nwords, max_sentences_per_word,
 
     top_n_words = wordfreq.top_n_list(language, nwords)
 
+    writer = csv.writer(sys.stdout, quoting=csv.QUOTE_ALL)
+
     for word in top_n_words:
         if word in word_map:
             sentences_l2 = list(word_map[word])[:max_sentences_per_word]
@@ -90,10 +97,11 @@ def make_clozes(sentence_file, language, nwords, max_sentences_per_word,
                 translations = " / ".join(translation_list)
                 if len(cloze) <= max_characters and \
                    len(translations) <= max_characters:
-                    print("<p>%s</p><p>%s</p>" % (cloze, translations))
+                    writer.writerow(["<p>%s</p><p>%s</p>"
+                                    % (cloze, translations)])
 
 
-def make_anki_cloze(sentence, word):
+def make_anki_cloze(sentence: str, word: str) -> str:
     """Make an Anki-formatted cloze out of a sentence.
 
     >>> make_anki_cloze("I battered the bat.", "bat")

@@ -1,12 +1,10 @@
-bilicloze: generate cloze tests from bilingual sentence lists
-=============================================================
+= bilicloze: create cloze tests from bilingual sentence lists
 
 Bilicloze takes an input file containing sentence translations and uses it
 to generate bilingual https://en.wikipedia.org/wiki/Cloze_test[cloze test]
 flashcard data for the most frequent words in a language.
 
-Description
------------
+== Description
 
 Bilicloze is a study aid to help learners who speak one language (L1)
 learn vocabulary in another language (L2).
@@ -36,8 +34,7 @@ suitable for direct import into the https://apps.ankiweb.net/[Anki]
 flashcard program. Bilicloze obtains word frequency data from the Python
 package https://pypi.org/project/wordfreq/[wordfreq].
 
-Usage
------
+== Usage
 
 General usage syntax:
 
@@ -64,8 +61,7 @@ To describe usage and options:
 ./bilicloze.py -h
 ----
 
-Input format sample
--------------------
+== Input format sample
 
 Here, ⇥ represents the tab character.
 
@@ -75,16 +71,14 @@ We will go.⇥Wir werden gehen.
 Du wirst essen.⇥You will eat.
 ----
 
-Output format sample
---------------------
+== Output format sample
 
 ----
 <p>Wir {{c1:werden}} gehen.</p><p>We'll go. / We will go.</p>
 <p>{{c1:Du}} wirst essen.</p><p>You will eat.</p>
 ----
 
-License
--------
+== License
 
 bilicloze is Copyright 2019 Pontus Lurcock and released under the
 MIT license. See source code for full license text.
