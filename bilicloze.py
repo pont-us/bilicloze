@@ -64,7 +64,7 @@ def make_clozes(sentence_file: str, language: str, nwords: int,
                 max_characters: int) -> None:
     sentence_map = OrderedDict()
     word_map = {}
-    
+
     with open(sentence_file) as fh:
         while True:
             line = fh.readline()
@@ -83,7 +83,10 @@ def make_clozes(sentence_file: str, language: str, nwords: int,
                 if sentence_l2 not in word_map[word]:
                     word_map[word][sentence_l2] = None
 
-    top_n_words = wordfreq.top_n_list(language, nwords)
+    # We request the top n*2 words, to be sure of having n words left
+    # after filtering out the undesirable ones.
+    top_n_words = filter_word_list(wordfreq.top_n_list(language, nwords * 2),
+                                   nwords)
 
     writer = csv.writer(sys.stdout, quoting=csv.QUOTE_ALL)
 
@@ -99,6 +102,22 @@ def make_clozes(sentence_file: str, language: str, nwords: int,
                    len(translations) <= max_characters:
                     writer.writerow(["<p>%s</p><p>%s</p>"
                                     % (cloze, translations)])
+
+
+def filter_word_list(words: List[str], max_words: int) -> List[str]:
+    """Filter numbers out of a list of words and truncate it.
+
+    :param words:
+    :return:
+
+    >>> filter_word_list(['celery', '123', 'apples', 'walnuts', 'grapes'], 3)
+    ['celery', 'apples', 'walnuts']
+    >>> filter_word_list(['1.23', '-4.560', 'foo', 'bar', 'baz'], 2)
+    ['foo', 'bar']
+    """
+    number_regex = re.compile("^[0-9.-]+$")
+    filtered = [word for word in words if not number_regex.fullmatch(word)]
+    return filtered[:max_words]
 
 
 def make_anki_cloze(sentence: str, word: str) -> str:
@@ -142,6 +161,6 @@ def clean_word(word: str) -> str:
     return re.sub(r"^[,.'\"()!]+", "",
                   re.sub(r"[,.'\"()!]+$", "", word.lower()))
 
-            
+
 if __name__ == "__main__":
     main()
