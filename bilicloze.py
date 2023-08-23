@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# clgplot is Copyright 2019 Pontus Lurcock (pont@talvi.net) and released
+# bilicloze is Copyright 2019 Pontus Lurcock (pont@talvi.net) and released
 # under the MIT license:
 
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -34,34 +34,64 @@ import wordfreq
 def main():
     parser = argparse.ArgumentParser(
         description="Create clozes from a bilingual sentence list.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-w", "--words", type=int,
-                        default=100,
-                        help="number of words for which to create clozes"),
-    parser.add_argument("-s", "--sentences-per-word", type=int,
-                        default=5,
-                        help="number of L2 sentences to clozify for each word"),
-    parser.add_argument("-t", "--translations-per-sentence", type=int,
-                        default=5,
-                        help="number of L1 translations for each L2 sentence"),
-    parser.add_argument("-m", "--max-characters", type=int,
-                        default=80,
-                        help="maximum characters in sentence or translations")
-    parser.add_argument("language", type=str,
-                        choices=sorted(wordfreq.available_languages().keys()),
-                        help="two-letter language code for L2")
-    parser.add_argument("sentence_file", type=str,
-                        help="file containing sentence data")
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "-w",
+        "--words",
+        type=int,
+        default=100,
+        help="number of words for which to create clozes",
+    ),
+    parser.add_argument(
+        "-s",
+        "--sentences-per-word",
+        type=int,
+        default=5,
+        help="number of L2 sentences to clozify for each word",
+    ),
+    parser.add_argument(
+        "-t",
+        "--translations-per-sentence",
+        type=int,
+        default=5,
+        help="number of L1 translations for each L2 sentence",
+    ),
+    parser.add_argument(
+        "-m",
+        "--max-characters",
+        type=int,
+        default=80,
+        help="maximum characters in sentence or translations",
+    )
+    parser.add_argument(
+        "language",
+        type=str,
+        choices=sorted(wordfreq.available_languages().keys()),
+        help="two-letter language code for L2",
+    )
+    parser.add_argument(
+        "sentence_file", type=str, help="file containing sentence data"
+    )
     args = parser.parse_args()
-    make_clozes(args.sentence_file, args.language,
-                args.words, args.sentences_per_word,
-                args.translations_per_sentence, args.max_characters)
+    make_clozes(
+        args.sentence_file,
+        args.language,
+        args.words,
+        args.sentences_per_word,
+        args.translations_per_sentence,
+        args.max_characters,
+    )
 
 
-def make_clozes(sentence_file: str, language: str, nwords: int,
-                max_sentences_per_word: int,
-                max_translations_per_sentence: int,
-                max_characters: int) -> None:
+def make_clozes(
+    sentence_file: str,
+    language: str,
+    nwords: int,
+    max_sentences_per_word: int,
+    max_translations_per_sentence: int,
+    max_characters: int,
+) -> None:
     sentence_map = OrderedDict()
     word_map = {}
 
@@ -85,8 +115,9 @@ def make_clozes(sentence_file: str, language: str, nwords: int,
 
     # We request the top n*2 words, to be sure of having n words left
     # after filtering out the undesirable ones.
-    top_n_words = filter_word_list(wordfreq.top_n_list(language, nwords * 2),
-                                   nwords)
+    top_n_words = filter_word_list(
+        wordfreq.top_n_list(language, nwords * 2), nwords
+    )
 
     writer = csv.writer(sys.stdout, quoting=csv.QUOTE_ALL)
 
@@ -94,21 +125,27 @@ def make_clozes(sentence_file: str, language: str, nwords: int,
         if word in word_map:
             sentences_l2 = list(word_map[word])[:max_sentences_per_word]
             for sentence_l2 in sentences_l2:
-                translation_list = \
-                    sentence_map[sentence_l2][:max_translations_per_sentence]
+                translation_list = sentence_map[sentence_l2][
+                    :max_translations_per_sentence
+                ]
                 cloze = make_anki_cloze(sentence_l2, word)
                 translations = " / ".join(translation_list)
-                if len(cloze) <= max_characters and \
-                   len(translations) <= max_characters:
-                    writer.writerow(["<p>%s</p><p>%s</p>"
-                                    % (cloze, translations)])
+                if (
+                    len(cloze) <= max_characters
+                    and len(translations) <= max_characters
+                ):
+                    writer.writerow(
+                        ["<p>%s</p><p>%s</p>" % (cloze, translations)]
+                    )
 
 
 def filter_word_list(words: List[str], max_words: int) -> List[str]:
     """Filter numbers out of a list of words and truncate it.
 
-    :param words:
-    :return:
+    :param words: a list of words
+    :param max_words: the maximum number of words to return
+    :return: the supplied word list with numbers taken out and
+             truncated to a maximum of max_words items
 
     >>> filter_word_list(['celery', '123', 'apples', 'walnuts', 'grapes'], 3)
     ['celery', 'apples', 'walnuts']
@@ -135,10 +172,12 @@ def make_anki_cloze(sentence: str, word: str) -> str:
     '{{c1::First}} things {{c1::first}}.'
     """
 
-    return re.subn(r"(^\W*| \W*)(%s)(\W* |\W*$)" % word,
-                   r"\1{{c1::\2}}\3",
-                   sentence,
-                   flags=re.IGNORECASE)[0]
+    return re.subn(
+        r"(^\W*| \W*)(%s)(\W* |\W*$)" % word,
+        r"\1{{c1::\2}}\3",
+        sentence,
+        flags=re.IGNORECASE,
+    )[0]
 
 
 def sentence_to_words(sentence: str) -> List[str]:
@@ -158,8 +197,9 @@ def clean_word(word: str) -> str:
     >>> clean_word("Full-time,")
     'full-time'
     """
-    return re.sub(r"^[,.'\"()!]+", "",
-                  re.sub(r"[,.'\"()!]+$", "", word.lower()))
+    return re.sub(
+        r"^[,.'\"()!]+", "", re.sub(r"[,.'\"()!]+$", "", word.lower())
+    )
 
 
 if __name__ == "__main__":
